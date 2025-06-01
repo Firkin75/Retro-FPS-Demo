@@ -280,7 +280,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 565674893}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1383843469}
+        m_TargetAssemblyTypeName: GameOverScreen, Assembly-CSharp
+        m_MethodName: backToMenu
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &565674893
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -480,7 +492,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 867800248}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1383843469}
+        m_TargetAssemblyTypeName: GameOverScreen, Assembly-CSharp
+        m_MethodName: reStart
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &867800248
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -767,6 +791,7 @@ GameObject:
   - component: {fileID: 1383843466}
   - component: {fileID: 1383843468}
   - component: {fileID: 1383843467}
+  - component: {fileID: 1383843469}
   m_Layer: 5
   m_Name: GameOverScreen
   m_TagString: Untagged
@@ -832,6 +857,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1383843465}
   m_CullTransparentMesh: 1
+--- !u!114 &1383843469
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1383843465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4936d0b92b449042882ff5eccf0ae57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1591021383
 GameObject:
   m_ObjectHideFlags: 0
@@ -914,7 +951,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1591021386}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1383843469}
+        m_TargetAssemblyTypeName: GameOverScreen, Assembly-CSharp
+        m_MethodName: Quit
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1591021386
 MonoBehaviour:
   m_ObjectHideFlags: 0

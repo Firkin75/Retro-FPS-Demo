@@ -8,7 +8,7 @@ public class PickUpRifleAmmo : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            GlobalAmmo.PickUpPistolAmmo(supplyAmount);
+            GlobalAmmo.PickUpRifleAmmo(supplyAmount);
             PickUpMessage.OnPickupMessage?.Invoke($"You picked up rifle ammo£¨+{supplyAmount}£©");
             Destroy(gameObject);
         }

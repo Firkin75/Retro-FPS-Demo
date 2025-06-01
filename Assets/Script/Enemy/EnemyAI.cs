@@ -8,16 +8,14 @@ using System.Collections;
 public class EnemyAI : MonoBehaviour
 {
 
+    public Vector3 MoveDirection { get; private set; } // 公开的移动方向（供 EnemySpriteController 访问）
+    public bool isDeaf;
 
-
-   
     public LayerMask Player;
     public float health;
     public GameObject defaultDropItem;
     public Transform[] patrolPoints;
     private int currentPatrolIndex = 0;
-
-   
 
     public Transform firePoint; // 在 Unity Inspector 里设置 FirePoint
     public int damage;
@@ -41,13 +39,7 @@ public class EnemyAI : MonoBehaviour
     // 视野和攻击范围
     public float sightRange, attackRange;
     protected bool playerInSightRange, playerInAttackRange;
-    
 
-
-
-
-    // 公开的移动方向（供 EnemySpriteController 访问）
-    public Vector3 MoveDirection { get; private set; }
 
     void Start()
     {
@@ -71,6 +63,10 @@ public class EnemyAI : MonoBehaviour
         }
         agent.updateRotation = false; // 禁用 NavMesh 自动旋转
         agent.updateUpAxis = false;   // 禁用 NavMesh 轴变换
+
+
+        agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+        agent.avoidancePriority = Random.Range(30, 70);  // 每个敌人避让优先级不同，避免互顶
     }
 
     void Update()
@@ -88,14 +84,13 @@ public class EnemyAI : MonoBehaviour
         if (distanceToPlayer <= sightRange)
         {
             // 定义检测层：不包括 TriggerCollider，包含所有正常的可视层
-            int visionMask = ~LayerMask.GetMask("TriggerCollider");
-
-            // 允许Trigger参与检测，确保玩家被检测到
-            if (Physics.Raycast(firePoint.position, directionToPlayer, out RaycastHit sightHit, sightRange, visionMask, QueryTriggerInteraction.Collide))
+            int visionMask = LayerMask.GetMask("Player", "Environment");
+            if (Physics.Raycast(firePoint.position, directionToPlayer, out RaycastHit hit, sightRange, visionMask, QueryTriggerInteraction.Ignore))
             {
-                if (sightHit.collider.CompareTag("Player"))
+                if (hit.collider.CompareTag("Player"))
                 {
                     playerInSightRange = true;
+                    isAggro = true;
                 }
             }
         }
@@ -116,7 +111,7 @@ public class EnemyAI : MonoBehaviour
         if ((isAggro || playerInSightRange) && !playerInAttackRange)
         {
             ChasePlayer();
-           
+
         }
         else if (playerInAttackRange && playerInSightRange)
         {
@@ -125,7 +120,7 @@ public class EnemyAI : MonoBehaviour
         else if (!playerInSightRange && !playerInAttackRange && !isAggro)
         {
             Patrolling();
-            
+
         }
 
 
@@ -188,14 +183,14 @@ public class EnemyAI : MonoBehaviour
         // 播放攻击动画
         anim.SetBool("isAttacking", true);
 
-       
+
 
 
     }
 
     public void raycastAttack()
     {
-        
+
         Vector3 directionToPlayer = (player.position - firePoint.position).normalized;
 
         // 朝玩家转向（可选）
@@ -208,17 +203,17 @@ public class EnemyAI : MonoBehaviour
             if (hit.collider.CompareTag("Player"))
             {
                 hit.collider.GetComponent<PlayerHealth>()?.TakeDamage(damage);
-                
-            }
-           
-        }
-       
 
-       
+            }
+
+        }
+
+
+
     }
 
 
-    
+
     public virtual void TakeDamage(float damage)
     {
 
@@ -295,14 +290,17 @@ public class EnemyAI : MonoBehaviour
     public void OnHeardGunshot()
     {
         if (!isAlive) return;
+        if (isDeaf != true)
+        {
+            isAggro = true;
+        }
+        
 
-        isAggro = true;
-       
     }
 
     public virtual GameObject GetDropItem()
     {
-        return defaultDropItem; // 默认掉落的物品（可以在子类中重写）
+        return defaultDropItem; 
     }
 
 
@@ -314,7 +312,5 @@ public class EnemyAI : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, sightRange);
     }
 
-    
+
 }
-
-

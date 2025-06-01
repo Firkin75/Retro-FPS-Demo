@@ -206,7 +206,7 @@ MonoBehaviour:
   flashCount: 2
   isAggro: 0
   sightRange: 20
-  attackRange: 13
+  attackRange: 17
 --- !u!114 &7004658212707887807
 MonoBehaviour:
   m_ObjectHideFlags: 0

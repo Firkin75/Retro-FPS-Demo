@@ -260,8 +260,8 @@ MonoBehaviour:
   flashDuration: 0.1
   flashCount: 1
   isAggro: 0
-  sightRange: 15
-  attackRange: 11
+  sightRange: 20
+  attackRange: 15
 --- !u!54 &183487642593511242
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -2,11 +2,12 @@ using UnityEngine;
 
 public class DoorScript : MonoBehaviour
 {
-    private Transform doorTransform; 
+   
     public GameObject enemySet;
     public bool enemyOpenable;
 
-    private Vector3 openOffset = new Vector3(0, 3, 0);
+    private Transform doorTransform;
+    private Vector3 openOffset = new Vector3(3, 0, 0);
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float autoCloseDelay = 5f;
 
@@ -28,12 +29,13 @@ public class DoorScript : MonoBehaviour
 
         if (doorTransform == null)
         {
-            Debug.LogError("DoorTransform not found! Make sure a child named 'Door' exists.");
+           
             return;
         }
 
         closedPosition = doorTransform.position;
-        openPosition = closedPosition + openOffset;
+        openPosition = closedPosition + doorTransform.up * openOffset.magnitude;
+
     }
 
     void Update()

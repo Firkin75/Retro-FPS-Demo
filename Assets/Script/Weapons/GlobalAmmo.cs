@@ -4,14 +4,18 @@ using UnityEngine.UI;
 
 public class GlobalAmmo : MonoBehaviour
 {
-    public static int handGunAmmo = 15;
+    public static int handGunAmmo;
     public static int heavyAmmo;
     public static string fist = "inf";
     public AudioSource pickupSound;
 
 
 
-
+    void Start()
+    {
+        handGunAmmo = 15;
+        heavyAmmo = 0;
+    }
 
     public static void PickUpPistolAmmo(int amount)
     {

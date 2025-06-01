@@ -18,8 +18,8 @@ public class SecretWallTrigger : MonoBehaviour
         wall = transform.parent; // 假设触发器是墙的子物体
         closedPosition = wall.position;
 
-        // 朝“后方”移动。这里用 -forward（即物体的后方方向）
-        openPosition = closedPosition - wall.forward * moveDistance;
+        
+        openPosition = closedPosition + wall.TransformDirection(Vector3.back * moveDistance);
     }
 
     void Update()
