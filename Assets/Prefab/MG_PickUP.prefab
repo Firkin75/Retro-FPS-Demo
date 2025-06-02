@@ -98,7 +98,7 @@ GameObject:
   - component: {fileID: 3061281359418575081}
   - component: {fileID: 3533893229507052515}
   - component: {fileID: 1540282258766622895}
-  - component: {fileID: 6478959960861964490}
+  - component: {fileID: 7980662368008870611}
   m_Layer: 0
   m_Name: MG_PickUP
   m_TagString: Untagged
@@ -155,7 +155,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.5954299, y: 0.27418303, z: 0.56152034}
   m_Center: {x: 0.0138447285, y: -0.03400734, z: 0.043952107}
---- !u!114 &6478959960861964490
+--- !u!114 &7980662368008870611
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -164,7 +164,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3268824693194606872}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb6dbf99d1cdcf148b7566378515d3a4, type: 3}
+  m_Script: {fileID: 11500000, guid: 3fd10ed9c4b9e6a478662a3d931aab54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   weaponName: MG

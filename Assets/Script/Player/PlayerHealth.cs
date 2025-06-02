@@ -1,67 +1,69 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+
 public class PlayerHealth : MonoBehaviour
 {
-    public bool isPlayerAlive = true;
-    public int maxHealth = 100; // 玩家的最大生命值
-    public Text hpText;
-    public GameObject ui;
-    public AudioSource hitAudio;
-    public static int currentHealth; // 玩家的当前生命值
-   
+    public bool isPlayerAlive = true;      // Whether the player is alive
+    public static int maxHealth = 100;     // Maximum health
+    public static int currentHealth;       // Current health (shared globally)
+
+    public Text hpText;                    // UI Text to display HP
+    public GameObject ui;                  // Reference to in-game UI to disable on death
+    public AudioSource hitAudio;          // Audio source for getting hit
+
     [SerializeField]
-    private float hitSoundCooldown = 2f; // 音效播放间隔
-    private float lastHitTime = -1f;
- 
-    
+    private float hitSoundCooldown = 2f;   // Cooldown for hit sound effect
+    private float lastHitTime = -1f;       // Last time the hit sound was played
+
     void Start()
     {
-        currentHealth = maxHealth;  
+        currentHealth = maxHealth; // Initialize HP
     }
 
     void Update()
     {
+        // Update HP text UI every frame
         hpText.text = currentHealth.ToString();
-
-     
     }
 
+    // Called when the player takes damage
     public void TakeDamage(int damage)
     {
         int remainingDamage = damage;
+
+        // Play hit sound if cooldown has passed
         if (Time.time - lastHitTime >= hitSoundCooldown)
         {
             hitAudio.Play();
             lastHitTime = Time.time;
         }
 
-
-        // 如果还有剩余伤害，减少生命值
+        // Apply damage if any
         if (remainingDamage > 0)
         {
-            currentHealth -= remainingDamage; // 减少生命值
+            currentHealth -= remainingDamage;
 
-            // 检查玩家是否死亡
+            // Check if the player has died
             if (currentHealth <= 0)
             {
                 Die();
-                ui.SetActive(false);
+                ui.SetActive(false); // Disable UI on death
             }
         }
-
-       
     }
+
+    // Called when healing or picking up health
     public void AddHealth(int amount)
     {
-        currentHealth = Mathf.Min(currentHealth + amount, maxHealth); // 增加护甲值，但不能超过最大值
+        // Heal but do not exceed max HP
+        currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
     }
-   
 
+    // Handle player death
     private void Die()
     {
-        
         Debug.Log("Player has died.");
-        SceneManager.LoadScene(2);
+        SceneManager.LoadScene(2); // Load death/game over scene
     }
 }

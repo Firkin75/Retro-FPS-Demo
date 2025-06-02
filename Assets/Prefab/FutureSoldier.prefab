@@ -138,15 +138,15 @@ MonoBehaviour:
   defaultDropItem: {fileID: 0}
   patrolPoints: []
   firePoint: {fileID: 7800636475433424660}
-  damage: 1
+  damage: 30
   dropPoint: {fileID: 2140310808625532738}
   atkSound: {fileID: 0}
   flashColor: {r: 1, g: 0, b: 0, a: 1}
   flashDuration: 0.1
   flashCount: 1
   isAggro: 0
-  sightRange: 6
-  attackRange: 5
+  sightRange: 15
+  attackRange: 8
 --- !u!114 &4581164999234492119
 MonoBehaviour:
   m_ObjectHideFlags: 0

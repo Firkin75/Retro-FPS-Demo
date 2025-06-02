@@ -1,34 +1,37 @@
 using UnityEngine;
 
 public class P08Pickup : MonoBehaviour
-    
-
 {
-   
-    private string weaponName = "P08";  // 需要拾取的武器名称（必须和 `WeaponHolder` 里的武器名称一致）
-    private int slotIndex = 1;
-
+    private string weaponName = "P08";   // Name of the weapon to register in WeaponManager
+    private int slotIndex = 1;           // Slot in which to place the weapon
 
     void Start()
     {
-        
+        // (Optional) Initialization logic can go here
     }
+
     void OnTriggerEnter(Collider other)
     {
+        // Only respond to the player
         if (other.CompareTag("Player"))
         {
-            Debug.Log("weaponPickup");
             WeaponManager weaponManager = FindFirstObjectByType<WeaponManager>();
             if (weaponManager != null)
             {
-                GlobalAmmo.handGunAmmo += 15;
+                // Add handgun ammo
+                GlobalAmmo.handGunAmmo += 4;
+
+                // Play pickup sound
                 weaponManager.pickupSound.Play();
+
+                // Register weapon into the player's inventory
                 weaponManager.PickupWeapon(weaponName, slotIndex);
 
-               
+                // Destroy the pickup object after collection
+                Destroy(gameObject);
 
-                
-                Destroy(gameObject); // 拾取后销毁拾取物
+                // Display pickup message
+                PickUpMessage.OnPickupMessage?.Invoke("You picked up a pistol (ammo +4)");
             }
         }
     }

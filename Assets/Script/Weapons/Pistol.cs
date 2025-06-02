@@ -3,42 +3,29 @@ using UnityEngine.UI;
 
 public class Pistol : MonoBehaviour
 {
+    public float gunDamage = 30;        // Damage dealt per shot
+    public float gunRange = 100;        // Shooting range
+    public float fireRate = 2f;         // Shots per second
+    public float soundRange = 50;       // Radius where enemies can hear the shot
 
+    public AudioSource pistolFire;      // Sound effect when firing
+    public AudioSource emptyMag;        // Sound effect when ammo is empty
+    public Camera fpsCam;               // Reference to the player's camera
+    public LayerMask enemyLayerMask;    // Layer mask to detect enemies
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-
-    
-
-    public float gunDamage = 30;
-    public float gunRange = 100;
-    public float fireRate = 2f;
-    public float soundRange = 50;
-
-  
-
-
-
-    public AudioSource pistolFire;
-    public AudioSource emptyMag;
-    public Camera fpsCam;
-    public LayerMask enemyLayerMask;
-   /* public Text ammoText;*/
-    
-    
     [SerializeField]
-    private Text ammoText;
-    private Animator gunAnim;
-    private Transform player;
-           
-    private float nextTimeToFire = 0;
+    private Text ammoText;              // UI Text to show ammo count
 
-    
+    private Animator gunAnim;           // Gun animation controller
+    private Transform player;           // Reference to the player
+
+    private float nextTimeToFire = 0;   // Cooldown timer for firing
 
     void Start()
     {
-       
-
         gunAnim = GetComponent<Animator>();
+
+        // Find player object by tag
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null)
         {
@@ -48,50 +35,41 @@ public class Pistol : MonoBehaviour
         {
             Debug.LogError("Player not found! Make sure the Player GameObject is tagged as 'Player'.");
         }
-
     }
 
-    
-
-
-    // Update is called once per frame
     void Update()
     {
-        
+        // Update the ammo text on screen
         ammoText.text = GlobalAmmo.handGunAmmo.ToString();
-     
 
-        
+        // Fire when left mouse button is pressed and cooldown allows it
         if (Input.GetButtonDown("Fire1") && Time.time >= nextTimeToFire)
         {
             if (GlobalAmmo.handGunAmmo > 0)
             {
-                
                 nextTimeToFire = Time.time + 1 / fireRate;
                 Fire();
-
             }
-
-            else {
+            else
+            {
+                // Play empty sound only once
                 if (!emptyMag.isPlaying)
                 {
                     emptyMag.Play();
                     Debug.Log("No Ammo!");
                 }
             }
-
-            
         }
-        
-
     }
+
     void Fire()
     {
+        // Consume ammo
         GlobalAmmo.handGunAmmo--;
         pistolFire.Play();
         gunAnim.SetTrigger("Fire");
 
-        // 模拟枪声（吸引敌人）
+        // Simulate gunshot sound to alert nearby enemies
         Collider[] enemyColliders = Physics.OverlapSphere(player.position, soundRange, enemyLayerMask);
         foreach (var enemyCollider in enemyColliders)
         {
@@ -102,7 +80,7 @@ public class Pistol : MonoBehaviour
             }
         }
 
-        // 水平自动瞄准部分
+        // Horizontal auto-aim implementation
         Vector3 origin = fpsCam.transform.position;
         Vector3 horizontalDirection = fpsCam.transform.forward;
         horizontalDirection.y = 0;
@@ -117,21 +95,21 @@ public class Pistol : MonoBehaviour
         {
             if (h.collider.CompareTag("Enemy"))
             {
-                // 增加一道射线判断是否有障碍物
+                // Additional raycast to check for obstacles
                 Vector3 toTarget = h.collider.bounds.center - origin;
                 Ray rayToTarget = new Ray(origin, toTarget.normalized);
                 float distanceToTarget = toTarget.magnitude;
 
-                // 忽略触发器的射线检测
+                // Ignore trigger colliders in obstacle check
                 if (Physics.Raycast(rayToTarget, out RaycastHit obstacleHit, distanceToTarget, ~0, QueryTriggerInteraction.Ignore))
                 {
                     if (!obstacleHit.collider.CompareTag("Enemy"))
                     {
-                        continue; // 被非敌人挡住，跳过
+                        continue; // Obstructed by non-enemy object, skip
                     }
                 }
 
-                // 没被遮挡，可以作为候选目标
+                // Unobstructed - consider as valid target
                 if (distanceToTarget < bestDistance)
                 {
                     bestDistance = distanceToTarget;
@@ -140,6 +118,7 @@ public class Pistol : MonoBehaviour
             }
         }
 
+        // Apply damage to the best valid target
         if (bestTarget.HasValue)
         {
             EnemyAI enemy = bestTarget.Value.collider.GetComponent<EnemyAI>();
@@ -154,7 +133,4 @@ public class Pistol : MonoBehaviour
             Debug.Log("No enemy hit by auto-aim.");
         }
     }
-
-
-
 }

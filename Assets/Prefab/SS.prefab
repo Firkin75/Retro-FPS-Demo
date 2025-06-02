@@ -191,11 +191,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fa1f7d0480b0544b86aa39edd3be3a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isDeaf: 0
   Player:
     serializedVersion: 2
     m_Bits: 8
   health: 150
-  defaultDropItem: {fileID: 0}
+  defaultDropItem: {fileID: 3268824693194606872, guid: 57b162763511caf4c8f3ce2a1e53ea6a, type: 3}
   patrolPoints: []
   firePoint: {fileID: 5104883197290934076}
   damage: 10

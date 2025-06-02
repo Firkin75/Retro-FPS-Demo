@@ -3,23 +3,25 @@ using UnityEngine.UI;
 
 public class AK : MonoBehaviour
 {
-    public float gunDamage;
-    public float gunRange;
-    public float fireRate;
-    public float soundRange;
-    public LayerMask enemyLayerMask;
-    public Text ammoText;
-    public AudioSource arFire;
-    public AudioSource emptyMag;
-    public Camera fpsCam;
+    public float gunDamage;              // Damage per shot
+    public float gunRange;              // Maximum shooting distance
+    public float fireRate;              // Bullets per second
+    public float soundRange;            // Radius for alerting enemies
+    public LayerMask enemyLayerMask;    // Layer to detect enemies
+    public Text ammoText;               // UI element to show current ammo
+    public AudioSource arFire;          // Sound effect when firing
+    public AudioSource emptyMag;        // Sound effect when out of ammo
+    public Camera fpsCam;               // First-person camera
 
-    private float nextTimeToFire = 0;
-    private Transform player;
-    private Animator gunAnim;
+    private float nextTimeToFire = 0;   // Time check for next allowed shot
+    private Transform player;           // Reference to the player's transform
+    private Animator gunAnim;           // Animator component for firing animation
 
     void Start()
     {
         gunAnim = GetComponent<Animator>();
+
+        // Find the player in the scene
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null)
         {
@@ -31,13 +33,12 @@ public class AK : MonoBehaviour
         }
     }
 
-    
-
     void Update()
     {
+        // Update ammo count on the UI
         ammoText.text = GlobalAmmo.heavyAmmo.ToString();
-       
 
+        // Handle firing input and cooldown
         if (Input.GetButton("Fire1") && Time.time >= nextTimeToFire)
         {
             if (GlobalAmmo.heavyAmmo > 0)
@@ -47,6 +48,7 @@ public class AK : MonoBehaviour
             }
             else
             {
+                // Play empty mag sound only if not already playing
                 if (!emptyMag.isPlaying)
                 {
                     emptyMag.Play();
@@ -57,11 +59,14 @@ public class AK : MonoBehaviour
 
     void Fire()
     {
+        // Consume one bullet
         GlobalAmmo.heavyAmmo--;
+
+        // Play fire sound and animation
         arFire.Play();
         gunAnim.SetTrigger("Fire");
 
-        // Gunshot sound simulation
+        // Simulate gunshot sound alerting nearby enemies
         Collider[] enemyColliders = Physics.OverlapSphere(player.position, soundRange, enemyLayerMask);
         foreach (var enemyCollider in enemyColliders)
         {
@@ -72,12 +77,13 @@ public class AK : MonoBehaviour
             }
         }
 
-        // 水平自动瞄准部分
+        // Horizontal auto-aim logic
         Vector3 origin = fpsCam.transform.position;
         Vector3 horizontalDirection = fpsCam.transform.forward;
         horizontalDirection.y = 0;
         horizontalDirection.Normalize();
 
+        // Detect enemies in a horizontal cone using SphereCast
         RaycastHit[] hits = Physics.SphereCastAll(origin, 0.5f, horizontalDirection, gunRange, enemyLayerMask);
 
         RaycastHit? bestTarget = null;
@@ -87,21 +93,21 @@ public class AK : MonoBehaviour
         {
             if (h.collider.CompareTag("Enemy"))
             {
-                // 增加一道射线判断是否有障碍物
+                // Perform additional raycast to ensure no obstacles are in the way
                 Vector3 toTarget = h.collider.bounds.center - origin;
                 Ray rayToTarget = new Ray(origin, toTarget.normalized);
                 float distanceToTarget = toTarget.magnitude;
 
-                // 忽略触发器的射线检测
+                // Ignore trigger colliders during obstacle check
                 if (Physics.Raycast(rayToTarget, out RaycastHit obstacleHit, distanceToTarget, ~0, QueryTriggerInteraction.Ignore))
                 {
                     if (!obstacleHit.collider.CompareTag("Enemy"))
                     {
-                        continue; // 被非敌人挡住，跳过
+                        continue; // Obstructed by a non-enemy object, skip
                     }
                 }
 
-                // 没被遮挡，可以作为候选目标
+                // No obstruction, consider as valid target
                 if (distanceToTarget < bestDistance)
                 {
                     bestDistance = distanceToTarget;
@@ -110,20 +116,14 @@ public class AK : MonoBehaviour
             }
         }
 
+        // Apply damage to the selected target
         if (bestTarget.HasValue)
         {
             EnemyAI enemy = bestTarget.Value.collider.GetComponent<EnemyAI>();
             if (enemy != null)
             {
                 enemy.TakeDamage(gunDamage);
-               
             }
         }
-       
     }
-
-
-
-
-
 }

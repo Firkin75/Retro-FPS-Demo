@@ -3,19 +3,19 @@ using UnityEngine.UI;
 
 public class MG : MonoBehaviour
 {
-    public float gunDamage = 30;
-    public float gunRange;
-    public float fireRate;
-    public float soundRange;
-    public LayerMask enemyLayerMask;
-    public Text ammoText;
-    public AudioSource mgFire;
-    public AudioSource emptyMag;
-    public Camera fpsCam;
+    public float gunDamage = 30;         // Damage dealt per shot
+    public float gunRange;               // Firing range
+    public float fireRate;               // Rate of fire (shots per second)
+    public float soundRange;             // Radius within which enemies can hear the shot
+    public LayerMask enemyLayerMask;     // Layer mask to filter enemies
+    public Text ammoText;                // UI element to show ammo count
+    public AudioSource mgFire;           // Sound played when firing
+    public AudioSource emptyMag;         // Sound played when out of ammo
+    public Camera fpsCam;                // Reference to the player's camera
 
-    private float nextTimeToFire = 0;
-    private Transform player;
-    private Animator gunAnim;
+    private float nextTimeToFire = 0;    // Time until next shot is allowed
+    private Transform player;            // Reference to the player transform
+    private Animator gunAnim;            // Animator for firing animation
 
     void Start()
     {
@@ -31,22 +31,22 @@ public class MG : MonoBehaviour
         }
     }
 
-
-
     void Update()
     {
+        // Update ammo UI
         ammoText.text = GlobalAmmo.heavyAmmo.ToString();
 
-
+        // Handle firing input and rate limit
         if (Input.GetButton("Fire1") && Time.time >= nextTimeToFire)
         {
-            if (GlobalAmmo.heavyAmmo > 0)
+            if (GlobalAmmo.heavyAmmo >= 2)
             {
                 nextTimeToFire = Time.time + 1 / fireRate;
                 Fire();
             }
             else
             {
+                // Play empty sound if out of ammo
                 if (!emptyMag.isPlaying)
                 {
                     emptyMag.Play();
@@ -57,11 +57,14 @@ public class MG : MonoBehaviour
 
     void Fire()
     {
-        GlobalAmmo.heavyAmmo--;
+        // Consume ammo
+        GlobalAmmo.heavyAmmo -= 2;
+
+        // Play firing sound and animation
         mgFire.Play();
         gunAnim.SetTrigger("Fire");
 
-        // Gunshot sound simulation
+        // Gunshot sound simulation - alert enemies within range
         Collider[] enemyColliders = Physics.OverlapSphere(player.position, soundRange, enemyLayerMask);
         foreach (var enemyCollider in enemyColliders)
         {
@@ -72,12 +75,13 @@ public class MG : MonoBehaviour
             }
         }
 
-        // 水平自动瞄准部分
+        // Horizontal auto-aim logic
         Vector3 origin = fpsCam.transform.position;
         Vector3 horizontalDirection = fpsCam.transform.forward;
         horizontalDirection.y = 0;
         horizontalDirection.Normalize();
 
+        // SphereCast to find enemies within horizontal cone
         RaycastHit[] hits = Physics.SphereCastAll(origin, 0.5f, horizontalDirection, gunRange, enemyLayerMask);
 
         RaycastHit? bestTarget = null;
@@ -87,21 +91,21 @@ public class MG : MonoBehaviour
         {
             if (h.collider.CompareTag("Enemy"))
             {
-                // 增加一道射线判断是否有障碍物
+                // Check for obstacles between player and enemy
                 Vector3 toTarget = h.collider.bounds.center - origin;
                 Ray rayToTarget = new Ray(origin, toTarget.normalized);
                 float distanceToTarget = toTarget.magnitude;
 
-                // 忽略触发器的射线检测
+                // Raycast that ignores trigger colliders
                 if (Physics.Raycast(rayToTarget, out RaycastHit obstacleHit, distanceToTarget, ~0, QueryTriggerInteraction.Ignore))
                 {
                     if (!obstacleHit.collider.CompareTag("Enemy"))
                     {
-                        continue; // 被非敌人挡住，跳过
+                        continue; // Target is blocked by a non-enemy object
                     }
                 }
 
-                // 没被遮挡，可以作为候选目标
+                // Not obstructed - consider as valid target
                 if (distanceToTarget < bestDistance)
                 {
                     bestDistance = distanceToTarget;
@@ -110,20 +114,14 @@ public class MG : MonoBehaviour
             }
         }
 
+        // Apply damage to the best visible target
         if (bestTarget.HasValue)
         {
             EnemyAI enemy = bestTarget.Value.collider.GetComponent<EnemyAI>();
             if (enemy != null)
             {
                 enemy.TakeDamage(gunDamage);
-
             }
         }
-
     }
-
-
-
-
-
 }

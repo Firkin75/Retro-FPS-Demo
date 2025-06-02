@@ -4,35 +4,36 @@ using UnityEngine;
 
 public class WeaponManager : MonoBehaviour
 {
-    public List<GameObject> weapons = new List<GameObject>(); // **固定槽位的武器列表**
-    public Transform weaponHolder; // 武器的存放位置
-    public AudioSource pickupSound;
+    public List<GameObject> weapons = new List<GameObject>(); // List of fixed weapon slots
+    public Transform weaponHolder;  // Where the weapons are stored in hierarchy
+    public AudioSource pickupSound; // Sound to play on weapon pickup
 
-    private int currentWeaponIndex = 0; // 当前武器索引
-    private const int maxSlots = 4;  // **设定武器槽位数量**
-
+    private int currentWeaponIndex = 0; // Current selected weapon index
+    private const int maxSlots = 4;     // Total number of weapon slots
 
     void Start()
     {
-        // **初始化 weapons，创建 5 个空槽**
+        // Initialize the weapon list with empty slots
         weapons = new List<GameObject>(new GameObject[maxSlots]);
 
-        // 默认武器放入 slot 0
+        // Assign default weapon to slot 0 if any child exists
         if (weaponHolder.childCount > 0)
         {
-            GameObject defaultWeapon = weaponHolder.GetChild(0).gameObject; // 默认武器
+            GameObject defaultWeapon = weaponHolder.GetChild(0).gameObject;
             defaultWeapon.SetActive(true);
             weapons[0] = defaultWeapon;
         }
 
-        SelectWeapon(0); // **确保默认武器可用**
+        // Ensure default weapon is selected
+        SelectWeapon(0);
     }
 
     void Update()
     {
+        // Prevent weapon switching during animation
         if (IsWeaponAnimating("Reload") || IsWeaponAnimating("Fire") || IsWeaponAnimating("Equip")) return;
 
-        // **鼠标滚轮切换武器**
+        // Mouse scroll wheel weapon switching
         float scroll = Input.GetAxis("Mouse ScrollWheel");
         if (scroll > 0f)
         {
@@ -43,12 +44,12 @@ public class WeaponManager : MonoBehaviour
             PreviousWeapon();
         }
 
-        // **数字键切换武器**
+        // Switch weapons with number keys (1~4)
         for (int i = 0; i < maxSlots; i++)
         {
             if (Input.GetKeyDown(KeyCode.Alpha1 + i) && weapons[i] != null)
             {
-                if (currentWeaponIndex == i) return; // **如果已经是当前武器，不切换**
+                if (currentWeaponIndex == i) return; // Do nothing if already holding this weapon
                 SelectWeapon(i);
             }
         }
@@ -56,15 +57,17 @@ public class WeaponManager : MonoBehaviour
 
     void NextWeapon()
     {
-        if (weapons.Where(w => w != null).Count() <= 1) return; // 只有 1 把武器时不切换
+        // If only one weapon is available, don’t switch
+        if (weapons.Where(w => w != null).Count() <= 1) return;
 
         int startIndex = currentWeaponIndex;
         int nextIndex = (currentWeaponIndex + 1) % maxSlots;
 
+        // Loop until a valid weapon is found or looped back to start
         while (weapons[nextIndex] == null)
         {
             nextIndex = (nextIndex + 1) % maxSlots;
-            if (nextIndex == startIndex) return; // 如果遍历一圈都没找到武器，就不切换
+            if (nextIndex == startIndex) return;
         }
 
         SelectWeapon(nextIndex);
@@ -72,42 +75,42 @@ public class WeaponManager : MonoBehaviour
 
     void PreviousWeapon()
     {
-        if (weapons.Where(w => w != null).Count() <= 1) return; // 只有 1 把武器时不切换
+        // If only one weapon is available, don’t switch
+        if (weapons.Where(w => w != null).Count() <= 1) return;
 
         int startIndex = currentWeaponIndex;
         int prevIndex = (currentWeaponIndex - 1 + maxSlots) % maxSlots;
 
+        // Loop until a valid weapon is found or looped back to start
         while (weapons[prevIndex] == null)
         {
             prevIndex = (prevIndex - 1 + maxSlots) % maxSlots;
-            if (prevIndex == startIndex) return; // 如果遍历一圈都没找到武器，就不切换
+            if (prevIndex == startIndex) return;
         }
 
         SelectWeapon(prevIndex);
     }
 
-
-
     void SelectWeapon(int index)
     {
         if (index < 0 || index >= weapons.Count || weapons[index] == null)
-            return; // 防止无效索引
+            return;
 
-        // **先禁用当前武器**
+        // Disable current weapon if exists
         if (currentWeaponIndex >= 0 && currentWeaponIndex < weapons.Count && weapons[currentWeaponIndex] != null)
         {
             weapons[currentWeaponIndex].SetActive(false);
         }
 
-        // **切换到新武器**
+        // Switch to the selected weapon
         currentWeaponIndex = index;
         weapons[currentWeaponIndex].SetActive(true);
 
-        // **这里调用 ResetWeaponAnimation()，确保对象是激活状态**
+        // Reset animation state to "Equip"
         ResetWeaponAnimation(weapons[currentWeaponIndex]);
     }
 
-
+    // Check if the current weapon is in the middle of a specific animation
     bool IsWeaponAnimating(string animationName)
     {
         if (weapons[currentWeaponIndex] == null) return false;
@@ -121,32 +124,30 @@ public class WeaponManager : MonoBehaviour
         return stateInfo.IsName(animationName);
     }
 
-    // **拾取武器并放入指定槽位**
+    // Pickup a weapon and assign it to the specified slot
     public void PickupWeapon(string weaponName, int slotIndex)
     {
         if (slotIndex >= maxSlots || slotIndex < 0)
         {
-
             return;
         }
 
-        // **如果已有相同武器，则不重复添加**
+        // Avoid adding duplicate weapons
         for (int i = 0; i < weapons.Count; i++)
         {
             if (weapons[i] != null && weapons[i].name == weaponName)
             {
-
                 return;
             }
         }
 
-        // **找到 UI 里的武器对象**
+        // Find the weapon by name under the weaponHolder
         Transform newWeaponTransform = weaponHolder.Find(weaponName);
         if (newWeaponTransform != null)
         {
             GameObject newWeapon = newWeaponTransform.gameObject;
 
-            // **替换指定槽位的武器**
+            // Replace the weapon in the specified slot
             weapons[slotIndex] = newWeapon;
             newWeapon.SetActive(false);
 
@@ -156,41 +157,41 @@ public class WeaponManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("武器 " + weaponName + " 不在 UI 里！");
+            Debug.LogWarning("Weapon " + weaponName + " not found under weaponHolder!");
         }
     }
+
+    // Reset weapon animation to "Equip" state
     void ResetWeaponAnimation(GameObject weapon)
     {
-        if (weapon == null) return; // 避免 null 错误
+        if (weapon == null) return;
 
         Animator animator = weapon.GetComponent<Animator>();
         if (animator != null)
         {
-            bool wasInactive = !weapon.activeSelf; // 记录对象是否是非激活的
+            bool wasInactive = !weapon.activeSelf;
 
+            // Temporarily activate weapon to reset animation state
             if (wasInactive)
             {
-                weapon.SetActive(true); // **暂时激活对象**
+                weapon.SetActive(true);
             }
 
-            if (animator.HasState(0, Animator.StringToHash("Equip"))) // 检查 "Idle" 是否存在
+            if (animator.HasState(0, Animator.StringToHash("Equip")))
             {
                 animator.Play("Equip", 0);
             }
             else
             {
-                Debug.LogWarning($"Animator 没有找到 'equip' 状态，跳过重置动画");
+                Debug.LogWarning($"Animator does not have 'Equip' state, skipping reset.");
             }
 
-            animator.Update(0); // **确保动画状态更新**
+            animator.Update(0); // Force animation update
 
             if (wasInactive)
             {
-                weapon.SetActive(false); // **恢复原来的激活状态**
+                weapon.SetActive(false); // Restore original active state
             }
         }
     }
-
-
-
 }

@@ -1,25 +1,21 @@
 using UnityEngine.AI;
 using UnityEngine;
-
-
-
 using System.Collections;
 
 public class EnemyAI : MonoBehaviour
 {
-
-    public Vector3 MoveDirection { get; private set; } // 公开的移动方向（供 EnemySpriteController 访问）
-    public bool isDeaf;
+    public Vector3 MoveDirection { get; private set; } // Public move direction for sprite controller
+    public bool isDeaf;                                // If true, enemy won't respond to sound
 
     public LayerMask Player;
     public float health;
-    public GameObject defaultDropItem;
-    public Transform[] patrolPoints;
+    public GameObject defaultDropItem;                 // Item to drop on death
+    public Transform[] patrolPoints;                   // Patrol route
     private int currentPatrolIndex = 0;
 
-    public Transform firePoint; // 在 Unity Inspector 里设置 FirePoint
+    public Transform firePoint;                        // Raycast origin for attacks
     public int damage;
-    public Transform dropPoint;
+    public Transform dropPoint;                        // Drop location for items
     public AudioSource atkSound;
 
     private Transform player;
@@ -28,62 +24,50 @@ public class EnemyAI : MonoBehaviour
     private Animator anim;
     private SpriteRenderer spriteRenderer;
     private Color originalColor;
-    public Color flashColor = Color.red;  // 设定闪红色
-    public float flashDuration;    // 闪烁持续时间
-    public int flashCount = 1;            // 闪烁次数
-    public bool isAggro;
+    public Color flashColor = Color.red;               // Damage flash color
+    public float flashDuration;
+    public int flashCount = 1;
+    public bool isAggro;                               // If enemy has detected the player
 
-
-
-
-    // 视野和攻击范围
+    // Detection and attack range
     public float sightRange, attackRange;
     protected bool playerInSightRange, playerInAttackRange;
-
 
     void Start()
     {
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null)
-        {
             player = playerObj.transform;
-        }
         else
-        {
-            Debug.LogError("Player not found! Make sure the Player GameObject is tagged as 'Player'.");
-        }
+            Debug.LogError("Player not found!");
 
         spriteRenderer = GetComponent<SpriteRenderer>();
-        originalColor = spriteRenderer.color;  // 获取原本颜色
+        originalColor = spriteRenderer.color;
         anim = GetComponent<Animator>();
+        agent = GetComponent<NavMeshAgent>();
 
-        if (agent == null)
-        {
-            agent = GetComponent<NavMeshAgent>();
-        }
-        agent.updateRotation = false; // 禁用 NavMesh 自动旋转
-        agent.updateUpAxis = false;   // 禁用 NavMesh 轴变换
+        agent.updateRotation = false;  // Prevent auto-rotation (billboard/sprite-friendly)
+        agent.updateUpAxis = false;    // Keep enemy upright on 2D/flat plane
 
-
+        // Improve pathing and prevent enemies from clumping
         agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
-        agent.avoidancePriority = Random.Range(30, 70);  // 每个敌人避让优先级不同，避免互顶
+        agent.avoidancePriority = Random.Range(30, 70);
     }
 
     void Update()
     {
         if (!isAlive) return;
 
-        // 根据速度控制 isMoving
+        // Animation based on movement
         anim.SetBool("isMoving", agent.velocity.sqrMagnitude > 0.01f);
 
         Vector3 directionToPlayer = (player.position - firePoint.position).normalized;
         float distanceToPlayer = Vector3.Distance(firePoint.position, player.position);
 
-        // 视野检测
+        // Sight check using raycast
         playerInSightRange = false;
         if (distanceToPlayer <= sightRange)
         {
-            // 定义检测层：不包括 TriggerCollider，包含所有正常的可视层
             int visionMask = LayerMask.GetMask("Player", "Environment");
             if (Physics.Raycast(firePoint.position, directionToPlayer, out RaycastHit hit, sightRange, visionMask, QueryTriggerInteraction.Ignore))
             {
@@ -95,7 +79,7 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
-        // 攻击范围检测
+        // Attack range check
         playerInAttackRange = false;
         if (distanceToPlayer <= attackRange)
         {
@@ -108,50 +92,36 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
-        if ((isAggro || playerInSightRange) && !playerInAttackRange)
+        // AI behavior state machine
+        if (isAggro && !playerInAttackRange)
         {
             ChasePlayer();
-
         }
         else if (playerInAttackRange && playerInSightRange)
         {
             AttackPlayer();
         }
-        else if (!playerInSightRange && !playerInAttackRange && !isAggro)
+        else if (!isAggro)
         {
             Patrolling();
-
         }
 
-
-
-        // 计算移动方向
-        if (agent.isStopped)
-        {
-            MoveDirection = Vector3.zero;
-
-        }
-        else
-            MoveDirection = agent.velocity.normalized;
-
-
-
-
+        // Update move direction for animation
+        MoveDirection = agent.isStopped ? Vector3.zero : agent.velocity.normalized;
     }
-
 
     protected virtual void Patrolling()
     {
         if (patrolPoints.Length == 0)
         {
-            // 没有巡逻点，敌人静止
             agent.isStopped = true;
             return;
         }
+
         anim.SetBool("isAttacking", false);
         agent.isStopped = false;
 
-        // 到达当前巡逻点后，切换下一个
+        // Move to next patrol point
         if (!agent.pathPending && agent.remainingDistance <= 0.5f)
         {
             currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
@@ -165,108 +135,89 @@ public class EnemyAI : MonoBehaviour
         agent.isStopped = false;
         agent.SetDestination(player.position);
         anim.SetBool("isAttacking", false);
-
     }
-
-
 
     private void AttackPlayer()
     {
-        // 停止移动
-        agent.SetDestination(transform.position);
+        agent.SetDestination(transform.position); // Stop moving
 
-        // 面向玩家
+        // Face the player
         Vector3 directionToPlayer = (player.position - firePoint.position).normalized;
-        transform.rotation = Quaternion.Slerp(transform.rotation,
-            Quaternion.LookRotation(directionToPlayer), Time.deltaTime * 5f);
+        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(directionToPlayer), Time.deltaTime * 5f);
 
-        // 播放攻击动画
         anim.SetBool("isAttacking", true);
-
-
-
-
     }
 
+    // Called by animation event
     public void raycastAttack()
     {
+        Debug.Log("Attack triggered!");
 
         Vector3 directionToPlayer = (player.position - firePoint.position).normalized;
-
-        // 朝玩家转向（可选）
         transform.rotation = Quaternion.LookRotation(directionToPlayer);
 
-        RaycastHit hit;
-        if (Physics.Raycast(firePoint.position, directionToPlayer, out hit, attackRange))
+        if (Physics.Raycast(firePoint.position, directionToPlayer, out RaycastHit hit, attackRange))
         {
             atkSound?.Play();
+
             if (hit.collider.CompareTag("Player"))
             {
                 hit.collider.GetComponent<PlayerHealth>()?.TakeDamage(damage);
-
             }
-
         }
-
-
-
     }
-
-
 
     public virtual void TakeDamage(float damage)
     {
-
         if (!isAlive) return;
+
         StartCoroutine(FlashRed());
         health -= damage;
+
+        // Become aggressive when damaged
         playerInSightRange = true;
         isAggro = true;
         agent.isStopped = false;
+
         if (health <= 0)
         {
-
             Die();
         }
-
     }
+
+    // Flash red effect when hit
     public IEnumerator FlashRed()
     {
         for (int i = 0; i < flashCount; i++)
         {
-            spriteRenderer.color = flashColor;  // 改为红色
-            yield return new WaitForSeconds(flashDuration);  // 等待一段时间
-            spriteRenderer.color = originalColor;  // 恢复原颜色
-            yield return new WaitForSeconds(flashDuration);  // 等待一段时间
+            spriteRenderer.color = flashColor;
+            yield return new WaitForSeconds(flashDuration);
+            spriteRenderer.color = originalColor;
+            yield return new WaitForSeconds(flashDuration);
         }
     }
 
     public virtual void Die()
     {
-        if (!isAlive) return; // 防止重复调用
+        if (!isAlive) return;
+
         BoxCollider box = GetComponent<BoxCollider>();
-        if (box != null)
-        {
-            box.enabled = false;
-        }
+        if (box != null) box.enabled = false;
+
         isAlive = false;
         agent.enabled = false;
 
-        // 重置所有动画状态
         anim.SetBool("isAttacking", false);
-
         anim.SetBool("isMoving", false);
 
-        // 确保Trigger被正确触发
-        anim.ResetTrigger("Die"); // 先重置
-        anim.SetTrigger("Die");   // 再触发
+        anim.ResetTrigger("Die");
+        anim.SetTrigger("Die");
 
-        /*CancelInvoke(nameof(ResetAttack));*/
         DropItem();
     }
+
     public virtual void DestroyGameObj()
     {
-
         Destroy(gameObject);
     }
 
@@ -274,35 +225,28 @@ public class EnemyAI : MonoBehaviour
     {
         if (defaultDropItem != null)
         {
-
             Vector3 dropPosition = dropPoint.position;
-            // 在敌人死亡位置生成武器
             GameObject dropItem = Instantiate(defaultDropItem, dropPosition, Quaternion.identity);
 
-            // 给武器添加初始物理弹力（如果武器有 Rigidbody）
+            // Optional: Add physics if the item has Rigidbody
             Rigidbody rb = dropItem.GetComponent<Rigidbody>();
-
         }
-
-
     }
 
+    // Called when player fires a gun nearby
     public void OnHeardGunshot()
     {
         if (!isAlive) return;
-        if (isDeaf != true)
+        if (!isDeaf)
         {
             isAggro = true;
         }
-        
-
     }
 
     public virtual GameObject GetDropItem()
     {
-        return defaultDropItem; 
+        return defaultDropItem;
     }
-
 
     private void OnDrawGizmosSelected()
     {
@@ -311,6 +255,4 @@ public class EnemyAI : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, sightRange);
     }
-
-
 }

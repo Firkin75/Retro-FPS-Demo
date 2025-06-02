@@ -3,46 +3,55 @@ using UnityEngine.UI;
 
 public class WeaponSway : MonoBehaviour
 {
-    public float bobbingSpeed = 5f;  // 摆动速度
-    public float bobbingAmount = 5f; // 摆动幅度
+    public float bobbingSpeed = 5f;   // Speed of weapon sway
+    public float bobbingAmount = 5f;  // Intensity of sway
 
-    private CharacterController playerController; // 角色控制器
-    private RectTransform weaponUI;  // UI 组件的 RectTransform
-    private Vector3 originalPosition;
-    private Vector3 lastPosition; // 记录上一帧位置
-    private float timer = 0f;
-  
+    private CharacterController playerController;  // Reference to the player's CharacterController
+    private RectTransform weaponUI;                // UI weapon element's RectTransform
+    private Vector3 originalPosition;              // Original anchored position
+    private Vector3 lastPosition;                  // Player's last position
+    private float timer = 0f;                      // Timer to control sway animation
 
     void Start()
     {
-        weaponUI = GetComponent<RectTransform>(); // 获取 UI 组件
-        originalPosition = weaponUI.anchoredPosition; // 记录初始位置
+        // Get RectTransform component of this weapon UI
+        weaponUI = GetComponent<RectTransform>();
+        originalPosition = weaponUI.anchoredPosition; // Store original UI position
 
+        // Auto-find the player CharacterController
         if (playerController == null)
         {
-            playerController = FindFirstObjectByType<CharacterController>(); // 自动获取角色控制器
+            playerController = FindFirstObjectByType<CharacterController>();
         }
-        lastPosition = playerController.transform.position; // 记录初始位置
+
+        lastPosition = playerController.transform.position; // Initialize last position
     }
 
     void Update()
     {
-        if (playerController == null) return; // 防止报错
+        if (playerController == null) return; // Safety check
 
-        // **用位置变化计算速度**
+        // Calculate player movement speed based on position delta
         float playerSpeed = (playerController.transform.position - lastPosition).magnitude / Time.deltaTime;
-        lastPosition = playerController.transform.position; // 更新上一帧位置
+        lastPosition = playerController.transform.position; // Update last position
 
-        if (playerSpeed > 0.01f) // 设定一个较低的阈值
+        if (playerSpeed > 0.01f) // Apply sway if movement is significant
         {
             timer += Time.deltaTime * bobbingSpeed;
-            float offsetX = Mathf.Sin(timer) * bobbingAmount; // 左右摆动
-            float offsetY = Mathf.Cos(timer * 2) * bobbingAmount * 0.5f; // 上下摆动
+
+            // Horizontal sway using sine wave
+            float offsetX = Mathf.Sin(timer) * bobbingAmount;
+
+            // Vertical sway using faster sine wave, smaller amplitude
+            float offsetY = Mathf.Cos(timer * 2) * bobbingAmount * 0.5f;
+
+            // Apply sway to UI weapon position
             weaponUI.anchoredPosition = originalPosition + new Vector3(offsetX, offsetY, 0);
         }
         else
         {
-            timer = 0; // 停止移动时归位
+            // Return to original position smoothly when idle
+            timer = 0;
             weaponUI.anchoredPosition = Vector3.Lerp(weaponUI.anchoredPosition, originalPosition, Time.deltaTime * 5f);
         }
     }
