@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class Billboard : MonoBehaviour
 {
-    private Transform cameraTransform;
+    private Transform cameraTransform; // Reference to the main camera's transform
 
     void Start()
     {
-        // 确保正确找到主相机
+        // Ensure the main camera is found correctly
         if (Camera.main != null)
         {
             cameraTransform = Camera.main.transform;
@@ -19,15 +19,15 @@ public class Billboard : MonoBehaviour
 
     void LateUpdate()
     {
-        if (cameraTransform == null) return; // 避免空引用错误
+        if (cameraTransform == null) return; // Avoid null reference errors
 
-        // 计算方向向量（让对象始终面对相机）
+        // Calculate direction vector from this object to the camera
         Vector3 direction = cameraTransform.position - transform.position;
 
-        // 如果不想让对象随相机上下旋转，可以锁定 y 轴：
+        // Optional: Lock vertical rotation (for horizontal-only facing, e.g. 2.5D sprites)
         direction.y = 0;
 
-        // 旋转对象，使其面向相机
+        // Rotate the object to face the camera
         transform.rotation = Quaternion.LookRotation(direction);
     }
 }

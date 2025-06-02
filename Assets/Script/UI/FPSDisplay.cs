@@ -8,6 +8,7 @@ public class FPSCounter : MonoBehaviour
 
     void Start()
     {
+        Application.targetFrameRate = 60; 
         fpsText = GetComponent<Text>();
     }
     void Update()
